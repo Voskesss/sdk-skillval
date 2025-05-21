@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EVC Registratie Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .error ul {
+            margin: 10px 0 0 20px;
+            padding: 0;
+        }
+
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .form-group.has-error input {
+            border-color: #dc3545;
+        }
+
+        .form-group.has-error label {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h1>EVC Registratie Test</h1>
+    
+    <!-- Provider info toevoegen -->
+    <div id="providerInfo" style="background: #e9ecef; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+        <h4>Provider Informatie</h4>
+        <pre id="providerDebug">Laden...</pre>
+    </div>
+    
+    <div id="messages"></div>
+    
+    <form id="registrationForm">
+        <div class="form-group">
+            <label for="title">Aanhef *</label>
+            <select name="title" id="title" required>
+                <option value="Dhr" selected>De heer</option>
+                <option value="Mevr">Mevrouw</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="first_name">Voornaam *</label>
+            <input type="text" id="first_name" name="first_name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="middle_name">Tussenvoegsel</label>
+            <input type="text" id="middle_name" name="middle_name" value="van">
+        </div>
+
+        <div class="form-group">
+            <label for="last_name">Achternaam *</label>
+            <input type="text" id="last_name" name="last_name" required>
+        </div>
+
+        <div class="form-group">
+            <label for="email">E-mail *</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+
+        <div class="form-group">
+            <label for="street_address">Straat + huisnummer *</label>
+            <input type="text" id="street_address" name="street_address" required>
+        </div>
+
+        <div class="form-group">
+            <label for="postal_code">Postcode *</label>
+            <input type="text" id="postal_code" name="postal_code" required>
+        </div>
+
+        <div class="form-group">
+            <label for="city">Plaats *</label>
+            <input type="text" id="city" name="city" value="Amsterdam" required>
+        </div>
+
+        <div class="form-group">
+            <label for="phone_number">Telefoonnummer *</label>
+            <input type="tel" id="phone_number" name="phone_number" value="0201234567" required>
+        </div>
+
+        <div class="form-group">
+            <label for="mobile_number">Mobiel nummer</label>
+            <input type="tel" id="mobile_number" name="mobile_number" value="0612345678">
+        </div>
+
+        <div class="form-group">
+            <label for="date_of_birth">Geboortedatum *</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" value="1990-01-01" required>
+        </div>
+
+        <div class="form-group">
+            <label for="place_of_birth">Geboorteplaats *</label>
+            <input type="text" id="place_of_birth" name="place_of_birth" value="Amsterdam" required>
+        </div>
+
+        <div class="form-group">
+            <label for="social_security_number">BSN *</label>
+            <input type="text" id="social_security_number" name="social_security_number" value="269740533" required>
+        </div>
+
+        <div class="form-group">
+            <label for="container_id">EVC Richting *</label>
+            <select name="container_id" id="container_id" required onchange="evcRegistration.updateTrajectories()">
+                <option value="">Selecteer een richting</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="trajectory_group" style="display: none;">
+            <label for="trajectory_id">EVC Traject *</label>
+            <select name="trajectory_id" id="trajectory_id" required>
+                <option value="">Selecteer een traject</option>
+            </select>
+        </div>
+
+        <!-- Verborgen veld voor evc_direction -->
+        <input type="hidden" name="evc_direction" id="evc_direction">
+
+        <div class="form-group">
+            <label for="relevant_diplomas">Relevante diploma's *</label>
+            <input type="text" id="relevant_diplomas" name="relevant_diplomas" value="VMBO-T" required>
+        </div>
+
+        <div class="form-group">
+            <label for="has_experience">Werkervaring? *</label>
+            <select name="has_experience" id="has_experience" required>
+                <option value="true" selected>Ja</option>
+                <option value="false">Nee</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="years_of_experience">Jaren ervaring</label>
+            <input type="number" id="years_of_experience" name="years_of_experience" value="5">
+        </div>
+
+        <div class="form-group">
+            <label for="additional_notes">Extra opmerkingen</label>
+            <textarea id="additional_notes" name="additional_notes">Test registratie</textarea>
+        </div>
+
+        <h3>Werkgever gegevens (optioneel)</h3>
+        
+        <div class="form-group">
+            <label for="employer_name">Bedrijfsnaam</label>
+            <input type="text" id="employer_name" name="employer_name" value="Test BV">
+        </div>
+
+        <div class="form-group">
+            <label for="employer_contact_name">Contactpersoon</label>
+            <input type="text" id="employer_contact_name" name="employer_contact_name" value="Jan Test">
+        </div>
+
+        <div class="form-group">
+            <label for="employer_contact_email">E-mail contactpersoon</label>
+            <input type="email" id="employer_contact_email" name="employer_contact_email" value="jan@testbv.nl">
+        </div>
+
+        <div class="form-group">
+            <label for="employer_street_address">Adres werkgever</label>
+            <input type="text" id="employer_street_address" name="employer_street_address" value="Werkstraat 1">
+        </div>
+
+        <div class="form-group">
+            <label for="employer_postal_code">Postcode werkgever</label>
+            <input type="text" id="employer_postal_code" name="employer_postal_code" value="1234 CD">
+        </div>
+
+        <div class="form-group">
+            <label for="employer_city">Plaats werkgever</label>
+            <input type="text" id="employer_city" name="employer_city" value="Amsterdam">
+        </div>
+
+        <button type="submit">Registreren</button>
+    </form>
+
+    <!-- Laad eerst de SDK -->
+    <script src="../src/index.js"></script>
+    
+    <!-- Initialiseer en gebruik de SDK -->
+    <script>
+        // Initialiseer de SDK alleen met embed token
+        const evcRegistration = new EVCRegistration({
+            apiUrl: 'http://localhost:5000',
+            embedToken: 'YwTppG2oXLRjT53F9qrc92PE9lng0XGC', // Placeholder
+            debug: true,  // Debug uit
+            onLoad: (data) => {
+                console.log('Trajecten geladen:', data);
+                // Optioneel: Update UI met provider info
+                document.getElementById('providerDebug').textContent = 
+                    JSON.stringify(data, null, 2);
+            }
+        });
+
+        // Form submit handler
+        document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            try {
+                await evcRegistration.submitRegistration(data);
+            } catch (error) {
+                console.error('Registratie fout:', error);
+            }
+        });
+    </script>
+</body>
+</html>
