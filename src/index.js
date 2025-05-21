@@ -384,6 +384,14 @@ class EVCRegistration {
                 <!-- Werkgever -->
                 <h3>Werkgever gegevens (optioneel)</h3>
                 <div class="evc-form-group">
+                    <label for="employer_kvk">KVK-nummer</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="employer_kvk" name="employer_kvk" style="flex: 1;">
+                        <button type="button" id="kvk_search_button" style="flex-shrink: 0;">Zoek bedrijf</button>
+                    </div>
+                    <div id="kvk_search_results" style="margin-top: 10px; display: none;"></div>
+                </div>
+                <div class="evc-form-group">
                     <label for="employer_name">Bedrijfsnaam</label>
                     <input type="text" id="employer_name" name="employer_name">
                 </div>
@@ -456,6 +464,34 @@ class EVCRegistration {
                 }
             }
         });
+
+        // KVK zoekknop event listener
+        const kvkSearchButton = this.container.querySelector('#kvk_search_button');
+        if (kvkSearchButton) {
+            kvkSearchButton.addEventListener('click', async () => {
+                const kvkNumber = this.container.querySelector('#employer_kvk').value.trim();
+                if (!kvkNumber) {
+                    this.showError('Vul een KVK-nummer in om te zoeken');
+                    return;
+                }
+                
+                try {
+                    kvkSearchButton.disabled = true;
+                    kvkSearchButton.textContent = 'Zoeken...';
+                    
+                    const companyData = await this.searchKvkData(kvkNumber);
+                    if (companyData) {
+                        this.fillEmployerData(companyData);
+                        this.showSuccess('Bedrijfsgegevens succesvol opgehaald');
+                    }
+                } catch (error) {
+                    this.showError('Fout bij ophalen bedrijfsgegevens: ' + error.message);
+                } finally {
+                    kvkSearchButton.disabled = false;
+                    kvkSearchButton.textContent = 'Zoek bedrijf';
+                }
+            });
+        }
     }
 
     async submitRegistration(formData) {
@@ -881,6 +917,97 @@ class EVCRegistration {
         // Voeg success message toe
         const form = this.container.querySelector('.evc-form');
         form.insertBefore(successDiv, form.firstChild);
+    }
+
+    async searchKvkData(kvkNumber) {
+        try {
+            // Gebruik de KVK API om bedrijfsgegevens op te halen
+            // In de testomgeving gebruiken we de test API key
+            const apiKey = 'l7xx1f2691f2520d487b902f4e0b57a0b197'; // Test API key
+            
+            // Eerst zoeken we het bedrijf op basis van KVK-nummer
+            const searchUrl = `https://api.kvk.nl/test/api/v1/basisprofielen/${kvkNumber}`;
+            
+            const response = await fetch(searchUrl, {
+                method: 'GET',
+                headers: {
+                    'apikey': apiKey,
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Geen bedrijf gevonden met dit KVK-nummer');
+                } else {
+                    throw new Error(`Fout bij ophalen bedrijfsgegevens: ${response.status}`);
+                }
+            }
+            
+            const data = await response.json();
+            
+            if (this.config.debug) {
+                console.log('KVK data opgehaald:', data);
+            }
+            
+            return data;
+        } catch (error) {
+            console.error('Fout bij ophalen KVK data:', error);
+            throw error;
+        }
+    }
+    
+    fillEmployerData(companyData) {
+        try {
+            // Vul de werkgevergegevens in op basis van de opgehaalde KVK-gegevens
+            const employerNameField = this.container.querySelector('#employer_name');
+            const employerStreetField = this.container.querySelector('#employer_street_address');
+            const employerPostalCodeField = this.container.querySelector('#employer_postal_code');
+            const employerCityField = this.container.querySelector('#employer_city');
+            
+            // Haal de relevante gegevens uit de KVK-data
+            if (companyData.eigenaar && companyData.eigenaar.naam) {
+                employerNameField.value = companyData.eigenaar.naam.volledigeNaam || '';
+            } else if (companyData.naam) {
+                employerNameField.value = companyData.naam || '';
+            }
+            
+            // Adresgegevens uit hoofdvestiging of eerste vestiging
+            const vestiging = companyData.hoofdvestiging || (companyData.vestigingen && companyData.vestigingen[0]);
+            
+            if (vestiging && vestiging.adressen && vestiging.adressen.length > 0) {
+                const adres = vestiging.adressen[0];
+                
+                // Straat en huisnummer
+                const straat = adres.straatnaam || '';
+                const huisnummer = adres.huisnummer || '';
+                const huisnummerToevoeging = adres.huisnummerToevoeging || '';
+                employerStreetField.value = `${straat} ${huisnummer}${huisnummerToevoeging ? ' ' + huisnummerToevoeging : ''}`;
+                
+                // Postcode
+                employerPostalCodeField.value = adres.postcode || '';
+                
+                // Plaats
+                employerCityField.value = adres.plaats || '';
+            }
+            
+            // Toon de resultaten
+            const resultsDiv = this.container.querySelector('#kvk_search_results');
+            if (resultsDiv) {
+                resultsDiv.innerHTML = `
+                    <div class="evc-success" style="margin-bottom: 10px;">
+                        <strong>Bedrijfsgegevens gevonden:</strong><br>
+                        ${employerNameField.value}<br>
+                        ${employerStreetField.value}<br>
+                        ${employerPostalCodeField.value} ${employerCityField.value}
+                    </div>
+                `;
+                resultsDiv.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Fout bij invullen werkgevergegevens:', error);
+            throw error;
+        }
     }
 }
 
